@@ -1,22 +1,68 @@
 Rune = {
   stoneSprite,
-  group
+  runeLeft,
+  rune,
+  group,
+  boardPosition,
+  socketPosition,
+  isSelected = false,
+  runes = {
+    'one',
+    'two',
+    'three',
+    'four',
+    -- 'five'
+  },
+  colors = {
+    'blue',
+    'green',
+    -- 'purple',
+    'red',
+    'yellow'
+  }
 }
 
-local function tapListener(event)
-  if ( event.phase == "moved" ) then
-    event.target.x = event.x
-    event.target.y = event.y
-    display.getCurrentStage():setFocus(event.target, event.id)
+-- local function touchListener(event)
+--   if ( event.phase == "moved" ) then
+--     event.target.x = event.x
+--     event.target.y = event.y
+--     display.getCurrentStage():setFocus(event.target, event.id)
 
-    local event = { name = "dropRune", target = event.target }
+--     local event = { name = "runeMove", target = event.target }
+
+--     Runtime:dispatchEvent(event)
+--   elseif ( event.phase == "ended" ) then
+--     display.getCurrentStage():setFocus(event.target, nil)
+
+--     local event = { name = "runeDrop", target = event.target }
+
+--     Runtime:dispatchEvent(event)
+--   end
+
+--   return true  -- Prevents tap/touch propagation to underlying objects
+-- end
+
+local function touchListener(event)
+  if event.phase == "ended" then
+    event.target.runeInstance.isSelected = not event.target.runeInstance.isSelected
+
+    local event = { name = "selectRune", target = event.target }
 
     Runtime:dispatchEvent(event)
-  elseif ( event.phase == "ended" ) then
-    display.getCurrentStage():setFocus(event.target, nil)
+
+    if event.target.runeInstance.isSelected then
+      local transitionParams = {
+        time = 1500,
+        alpha = 0.5,
+        iterations = -1,
+        transition = easing.continuousLoop
+      }
+
+      transition.to(event.target, transitionParams)
+    end
   end
 
-  return true  -- Prevents tap/touch propagation to underlying objects
+  return true
 end
 
 function Rune:new(o)
@@ -28,7 +74,7 @@ function Rune:new(o)
   return o
 end
 
-function Rune:create(sceneGroup, x, y)
+function Rune:create(sceneGroup, x, y, boardPosition)
   self.group = display.newGroup()
 
   local options = {
@@ -38,22 +84,34 @@ function Rune:create(sceneGroup, x, y)
     sheetContentWidth = 1536,
     sheetContentHeight = 128,
   }
-  local imageSheet = graphics.newImageSheet("assets/images/stone.png", options)
+  local stoneImageSheet = graphics.newImageSheet("assets/images/stone.png", options)
+  local runeLeft = self.runes[math.random(#self.runes)]
+  local colorLeft = self.colors[math.random(#self.colors)]
 
-  self.stoneSprite = display.newSprite(self.group, imageSheet, { name="stone", start = 1, count = 12 })
+  self.boardPosition = boardPosition
+  self.stoneSprite = display.newSprite(self.group, stoneImageSheet, { name="stone", start = 1, count = 12 })
   self.stoneSprite:setFrame(12)
+  self.runeLeft = display.newImage(self.group, "assets/images/rune_"..runeLeft.."_"..colorLeft.."_left.png")
   self.group.x = x
   self.group.y = y
   self.group.runeInstance = self
 
-  self.group:addEventListener("touch", tapListener)
+  -- self.group:addEventListener("touch", touchListener)
+  self.group:addEventListener("touch", touchListener)
 
   sceneGroup:insert(self.group)
 end
 
 function Rune:updateAngle(frame)
-  print(frame)
+  local angle = frame * 30
+
   self.stoneSprite:setFrame(frame)
+  self.runeLeft.rotation = angle
+end
+
+function Rune:updatePosition(x, y)
+  self.group.x = x;
+  self.group.y = y;
 end
 
 return Rune
