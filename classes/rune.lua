@@ -6,17 +6,16 @@ Rune = {
   boardPosition,
   socketPosition,
   isSelected = false,
+  isDestoryed = false,
   runes = {
-    'one',
-    'two',
-    'three',
-    'four',
-    -- 'five'
+    'fire',
+    'earth',
+    'water',
+    'air',
   },
   colors = {
     'blue',
     'green',
-    -- 'purple',
     'red',
     'yellow'
   }
@@ -103,7 +102,7 @@ function Rune:create(sceneGroup, x, y, boardPosition)
 end
 
 function Rune:updateAngle(frame)
-  local angle = frame * 30
+  local angle = frame * 22.5
 
   self.stoneSprite:setFrame(frame)
   self.runeLeft.rotation = angle

@@ -10,6 +10,7 @@ local function touchListener(event)
 
     Runtime:dispatchEvent(event)
   end
+
   return true
 end
 

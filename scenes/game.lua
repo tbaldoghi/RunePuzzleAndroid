@@ -1,13 +1,16 @@
 local composer = require("composer")
 local scene = composer.newScene()
 
+local Orb = require("classes.orb")
 local Socket = require("classes.socket")
 local Rune = require("classes.rune")
+local Forge = require("classes.forge")
 
-local numberOfSockets = 12
+local numberOfSockets = 16
 local offsetX = 300
 local offsetY = 700
 local selectedRune
+local orb
 local sockets = {}
 local runes = {}
 
@@ -97,6 +100,18 @@ end
 --   return true
 -- end
 
+local function isSolved()
+  for i = 1, #sockets, 1 do
+    if sockets[i].hasRune == false then
+      return false
+    end
+  end
+
+  for i = 1, #runes, 1 do
+    
+  end
+end
+
 local function handleSelectRune(event)
   if selectedRune then
     transition.cancel(selectedRune)
@@ -123,20 +138,51 @@ local function handleSelectSocket(event, sceneGroup)
     local socketPosition = event.target.socketInstance.boardPosition
 
     transition.to(selectedRune, { x = sockets[socketPosition].image.x, y = sockets[socketPosition].image.y, time = 150, onComplete = function()
+        local boardPosition = selectedRune.runeInstance.boardPosition
+
+        transition.cancel(selectedRune)
+        selectedRune.alpha = 1
+        selectedRune.runeInstance.boardPosition = nil
+        selectedRune.runeInstance.isSelected = false
+        selectedRune = nil
+
+        if boardPosition then
+          addRune(sceneGroup, display.contentCenterX - offsetX + (offsetX * (boardPosition - 1)), display.contentCenterY + offsetY, boardPosition)
+        end
+
+
+      end
+    })
+
+    selectedRune.runeInstance:updateAngle(socketPosition)
+  end
+
+  return true
+end
+
+local function handleSelectForge(event, sceneGroup)
+  if selectedRune then
+    local x = event.target.x
+    local y = event.target.y
+
+    transition.to(selectedRune, { x = x, y = y, time = 150, onComplete = function()
       local boardPosition = selectedRune.runeInstance.boardPosition
+
+      orb:renderOrb(sceneGroup, orb.value + 1)
       transition.cancel(selectedRune)
       selectedRune.alpha = 1
-      selectedRune.runeInstance.boardPosition = nil
-      selectedRune.runeInstance.isSelected = false
-      selectedRune = nil
+      transition.to(selectedRune, { alpha = 0, time = 300 , onComplete = function()
+          selectedRune.runeInstance.isDestoryed = true
+          selectedRune:removeSelf()
+          selectedRune = nil
+        end
+      })
 
       if boardPosition then
         addRune(sceneGroup, display.contentCenterX - offsetX + (offsetX * (boardPosition - 1)), display.contentCenterY + offsetY, boardPosition)
       end
     end
     })
-
-    selectedRune.runeInstance:updateAngle(socketPosition)
   end
 
   return true
@@ -147,15 +193,24 @@ function scene:create(event)
 	local sceneGroup = self.view
 	-- Code here runs when the scene is first created but has not yet appeared on screen
 
+  orb = Orb:new()
+
+  orb:create(sceneGroup)
+  orb:renderOrb(sceneGroup, 1)
+
   for i = 1, numberOfSockets, 1 do
     local socket = Socket:new()
 
-    local x = display.contentCenterX + math.sin((i * 30 * math.pi) / 180) * 400
-    local y = display.contentCenterY - math.cos((i * 30 * math.pi) / 180) * 400
+    local x = display.contentCenterX + math.sin((i * 22.5 * math.pi) / 180) * 425
+    local y = display.contentCenterY - math.cos((i * 22.5 * math.pi) / 180) * 425
 
     socket:create(sceneGroup, x, y, i)
     table.insert(sockets, socket)
   end
+
+  local forge = Forge:new()
+
+  forge:create(sceneGroup)
 
   for i = 0, 2, 1 do
     local boardPosition = i + 1
@@ -166,6 +221,10 @@ function scene:create(event)
   Runtime:addEventListener("selectRune", handleSelectRune)
   Runtime:addEventListener("selectSocket", function(event)
       handleSelectSocket(event, sceneGroup)
+    end
+  )
+  Runtime:addEventListener("selectForge", function(event)
+      handleSelectForge(event, sceneGroup)
     end
   )
 
