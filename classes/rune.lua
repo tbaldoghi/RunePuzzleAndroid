@@ -1,45 +1,17 @@
+local runes = require("consts.runes")
+local colors = require("consts.colors")
+
 Rune = {
   stoneSprite,
-  runeLeft,
   rune,
+  runeType,
+  colorType,
   group,
   boardPosition,
   socketPosition,
   isSelected = false,
-  isDestoryed = false,
-  runes = {
-    'fire',
-    'earth',
-    'water',
-    'air',
-  },
-  colors = {
-    'blue',
-    'green',
-    'red',
-    'yellow'
-  }
+  isDestoryed = false
 }
-
--- local function touchListener(event)
---   if ( event.phase == "moved" ) then
---     event.target.x = event.x
---     event.target.y = event.y
---     display.getCurrentStage():setFocus(event.target, event.id)
-
---     local event = { name = "runeMove", target = event.target }
-
---     Runtime:dispatchEvent(event)
---   elseif ( event.phase == "ended" ) then
---     display.getCurrentStage():setFocus(event.target, nil)
-
---     local event = { name = "runeDrop", target = event.target }
-
---     Runtime:dispatchEvent(event)
---   end
-
---   return true  -- Prevents tap/touch propagation to underlying objects
--- end
 
 local function touchListener(event)
   if event.phase == "ended" then
@@ -84,18 +56,17 @@ function Rune:create(sceneGroup, x, y, boardPosition)
     sheetContentHeight = 128,
   }
   local stoneImageSheet = graphics.newImageSheet("assets/images/stone.png", options)
-  local runeLeft = self.runes[math.random(#self.runes)]
-  local colorLeft = self.colors[math.random(#self.colors)]
+  self.runeType = runes[math.random(#runes)]
+  self.colorType = colors[math.random(#colors)]
 
   self.boardPosition = boardPosition
   self.stoneSprite = display.newSprite(self.group, stoneImageSheet, { name="stone", start = 1, count = 12 })
   self.stoneSprite:setFrame(12)
-  self.runeLeft = display.newImage(self.group, "assets/images/rune_"..runeLeft.."_"..colorLeft.."_left.png")
+  self.rune = display.newImage(self.group, "assets/images/rune_"..self.runeType.."_"..self.colorType..".png")
   self.group.x = x
   self.group.y = y
   self.group.runeInstance = self
 
-  -- self.group:addEventListener("touch", touchListener)
   self.group:addEventListener("touch", touchListener)
 
   sceneGroup:insert(self.group)
@@ -104,13 +75,30 @@ end
 function Rune:updateAngle(frame)
   local angle = frame * 22.5
 
+  self.socketPosition = frame
   self.stoneSprite:setFrame(frame)
-  self.runeLeft.rotation = angle
+  self.rune.rotation = angle
 end
 
 function Rune:updatePosition(x, y)
   self.group.x = x;
   self.group.y = y;
+end
+
+function Rune:disable()
+  self.group:removeEventListener("touch", touchListener)
+end
+
+function Rune:hide()
+  local transitionParams = {
+    time = 1500,
+    xScale = 0,
+    yScale = 0,
+    iterations = -1,
+    transition = easing.linear
+  }
+
+  transition.scaleTo(self.group, transitionParams)
 end
 
 return Rune

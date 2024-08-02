@@ -33,4 +33,8 @@ function Socket:create(sceneGroup, x, y, boardPosition)
   self.image:addEventListener("touch", touchListener)
 end
 
+function Socket:disable()
+  self.image:removeEventListener("touch", touchListener)
+end
+
 return Socket

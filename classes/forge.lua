@@ -30,4 +30,8 @@ function Forge:create(sceneGroup)
   self.image:addEventListener("touch", touchListener)
 end
 
+function Forge:disable()
+  self.image:removeEventListener("touch", touchListener)
+end
+
 return Forge
